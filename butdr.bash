@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup variables
-GITHUB_LINK="https://raw.githubusercontent.com/rootorchild/butdr/master"
+GITHUB_LINK="https://raw.githubusercontent.com/mbrother2/butdr/master"
 BIN_DIR="${HOME}/bin"
 CONF_DIR="${HOME}/.config"
 ACCT_DIR="${CONF_DIR}/accounts"
@@ -496,10 +496,10 @@ show_info(){
         echo ""
         if [[ "${OS}" == "Ubuntu" ]] || [[ "${OS}" == "Debian" ]]
         then
-            echo "IMPORTANT: Please run command to use butgg: source ${HOME}/.profile "
+            echo "IMPORTANT: Please run command to use butdr: source ${HOME}/.profile "
         fi
         echo "If you get trouble when use butgg.bash please report here:"
-        echo "https://github.com/mbrother2/backuptogoogle/issues"
+        echo "https://github.com/mbrother2/butdr/issues"
     fi
 }
 
