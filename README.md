@@ -3,6 +3,7 @@ Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
 # What can this script do?
+- Download & config rclone with your Google credential
 - Create cron auto backup
 - Exclude/include file/directory when run cron backup
 - Sync backup directory from local to Google Drive
