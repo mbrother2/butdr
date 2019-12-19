@@ -43,7 +43,7 @@ $HOME (/root or /home/$USER)
 # How to use
 **On Linux system:**
 ```
-curl -o butgg.bash https://raw.githubusercontent.com/mbrother2/butdr/master/butdr.bash
+curl -o butdr.bash https://raw.githubusercontent.com/mbrother2/butdr/master/butdr.bash
 bash butdr.bash --setup
 ```
 
