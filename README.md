@@ -1,5 +1,5 @@
 # butdr
-Backup to Cloud solution
+Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
 # What can this script do?
