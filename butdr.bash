@@ -519,7 +519,7 @@ _help(){
     echo "    global        config global file"
     echo "    show          show all configs"
     echo "  --update        update butdr.bash & cron_backup.bash to latest version"
-    echo "  --uninstall     remove all butdr scripts and ${HOME}.config directory"
+    echo "  --uninstall     remove all butdr scripts and ${HOME}/.config directory"
 }
 
 # Setup or reset all scripts & config file
@@ -605,7 +605,7 @@ _uninstall(){
         rm -rf ${CONF_DIR}
         if [ $? -eq 0 ]
         then
-            echo "`date '+[ %d/%m/%Y %H:%M:%S ]' `Remove directory ${CONF_DIR} successful"
+            echo "`date '+[ %d/%m/%Y %H:%M:%S ]'` Remove directory ${CONF_DIR} successful"
         else
             show_write_log "[ERROR] Can not remove directory ${CONF_DIR}. Please check permission of this directory"
         fi
