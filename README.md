@@ -2,6 +2,9 @@
 Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
+# Plan
+- Add support Dropbox
+
 # What can this script do?
 - Download & config rclone with your Google credential
 - Create cron auto backup
