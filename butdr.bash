@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup variables
-GITHUB_LINK="https://raw.githubusercontent.com/mbrother2/butdr/master"
+GITHUB_LINK="https://raw.githubusercontent.com/rootorchild/butdr/master"
 BIN_DIR="${HOME}/bin"
 CONF_DIR="${HOME}/.config"
 ACCT_DIR="${CONF_DIR}/accounts"
@@ -58,7 +58,7 @@ check_option(){
     # Check option is number
     if [ "$1" == number ]
     then
-        if [ -z "$2" ]
+        if [ -z "$3" ]
         then
             echo "Please choose from 1 to $2"
             return 1
@@ -68,13 +68,13 @@ check_option(){
             then
                 if [[ $2 -lt 1 ]] || [[ $2 -gt $3 ]]
                 then
-                    echo "Please choose from 1 to $2"
+                    echo "Please choose from 1 to $3"
                     return 1
                 else
                     return 0
                 fi
             else
-                echo "Please choose from 1 to $2"
+                echo "Please choose from 1 to $3"
                 return 1
             fi
         fi
@@ -125,7 +125,7 @@ check_log_file(){
             LOG_FILE=${DF_LOG_FILE}
         fi
     fi
-    create_dir .config
+    create_dir .config/rclone
     create_dir .config/accounts
     create_dir bin
 }
@@ -271,8 +271,28 @@ download_rclone(){
     rm -rf rclone.zip rclone-butdr
 }
 
+# Choose Cloud
+choose_cloud(){
+    echo ""
+    echo "Which cloud you will use?"
+    echo "1. Google Drive"
+    echo "2. Dropbox"
+    read -p " Your choice: " CHOOSE_CLOUD
+    check_option number "${CHOOSE_CLOUD}" 2
+    while [ $? -ne 0 ]
+    do
+        read -p " Your choice: " CHOOSE_CLOUD
+        check_option number "${CHOOSE_CLOUD}" 2
+    done
+    case ${CHOOSE_CLOUD} in
+        1) CLOUD_TYPE="drive" ;;
+        2) CLOUD_TYPE="dropbox" ;;
+    esac
+}
+
 # Setup Google drive account
 setup_drive(){
+    show_write_log "Creating Google drive account..."
     echo ""
     echo "Read more: https://github.com/mbrother2/backuptogoogle/wiki/Create-own-Google-credential-step-by-step"
     read -p " Your Google API client_id: " DRIVE_CLIENT_ID
@@ -284,39 +304,70 @@ setup_drive(){
     then
         if [ -z ${DRIVE_FOLDER_ID} ]
         then
-            ${RCLONE_BIN} config create googledrive drive config_is_local false scope drive
+            ${RCLONE_BIN} config create drive drive config_is_local false scope drive
         else
-            ${RCLONE_BIN} config create googledrive drive config_is_local false scope drive root_folder_id ${DRIVE_FOLDER_ID}
+            ${RCLONE_BIN} config create drive drive config_is_local false scope drive root_folder_id ${DRIVE_FOLDER_ID}
         fi
     else
         if [ -z ${DRIVE_FOLDER_ID} ]
         then
-            ${RCLONE_BIN} config create googledrive drive config_is_local false scope drive client_id ${DRIVE_CLIENT_ID} client_secret ${DRIVE_CLIENT_SECRET}
+            ${RCLONE_BIN} config create drive drive config_is_local false scope drive client_id ${DRIVE_CLIENT_ID} client_secret ${DRIVE_CLIENT_SECRET}
         else
-            ${RCLONE_BIN} config create googledrive drive config_is_local false scope drive client_id ${DRIVE_CLIENT_ID} client_secret ${DRIVE_CLIENT_SECRET} root_folder_id ${DRIVE_FOLDER_ID}
+            ${RCLONE_BIN} config create drive drive config_is_local false scope drive client_id ${DRIVE_CLIENT_ID} client_secret ${DRIVE_CLIENT_SECRET} root_folder_id ${DRIVE_FOLDER_ID}
         fi
     fi
-    write_config "${ACCT_DIR}/googledrive.conf" DRIVE_FOLDER_ID  "${DF_DRIVE_FOLDER_ID}"  "${DRIVE_FOLDER_ID}"
+    show_write_log "Checking connect to Google Drive..."
+    ${RCLONE_BIN} about drive: &>/dev/null
+    detect_error "Connect Google Drive successful" "[CONNECT][FAIL]" "Can not connect Google Drive with your credential, please check again"
+    write_config "${ACCT_DIR}/drive.conf" DRIVE_FOLDER_ID "${DF_DRIVE_FOLDER_ID}" "${DRIVE_FOLDER_ID}"
+    write_config "${ACCT_DIR}/drive.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
 }
 
-# Create config for Google drive account
-create_config(){
+# Setup Dropbox account
+setup_dropbox(){
+    show_write_log "Creating Dropbox account..."
     echo ""
-    read -p " Which directory on your server do you want to upload to account $1?(default ${DF_BACKUP_DIR}): " BACKUP_DIR
-    read -p " How many days do you want to keep backup on Google Drive?(default ${DF_DAY_REMOVE}): " DAY_REMOVE
+    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step"
+    read -p "Your Dropbox App key: " DROPBOX_APP_KEY
+    read -p "Your Dropbox App secret: " DROPBOX_APP_SECRET
+    read -p "Your Dropbox access token: " DROPBOX_ACCESS_TOKEN
+    cat >> "${RCLONE_CONF}" <<EOF
+[dropbox]
+type = dropbox
+app_key = ${DROPBOX_APP_KEY}
+app_secret = ${DROPBOX_APP_SECRET}
+token = ${DROPBOX_ACCESS_TOKEN}
+EOF
+    show_write_log "Checking connect to Dropbox..."
+    ${RCLONE_BIN} about dropbox: &>/dev/null
+    detect_error "Connect Dropbox successful" "[CONNECT][FAIL]" "Can not connect Dropbox with your credential, please check again"
+    write_config "${ACCT_DIR}/dropbox.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
+}
+
+# Create config for Cloud account
+create_config(){
+    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
+    echo ""
+    read -p " Which directory on your server do you want to upload to account ${CLOUD_TYPE}?(default ${DF_BACKUP_DIR}): " BACKUP_DIR
+    read -p " How many days do you want to keep backup on Cloud?(default ${DF_DAY_REMOVE}): " DAY_REMOVE
     echo ""
     echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F"
     read -p " Do you want only sync file(default no)(y/n): " SYNC_FILE
-    DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/$1.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
-    if [[ -z ${DRIVE_FOLDER_ID} ]] || [[ "${FIRST_OPTION}" == "--config" ]]
+    if [ "${CLOUD_TYPE}" == "drive" ]
     then
-        echo ""
-        echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID"
-        if [ "${SYNC_FILE}" == "y" ]
+        DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/${CLOUD_TYPE}.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
+        if [[ -z ${DRIVE_FOLDER_ID} ]] || [[ "${FIRST_OPTION}" == "--config" ]]
         then
-            echo "Because you choose sync file method, so you must enter exactly Google folder ID here!"
+            echo ""
+            echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID"
+            if [ "${SYNC_FILE}" == "y" ]
+            then
+                echo "Because you choose sync file method, so you must enter exactly Google folder ID here!"
+            fi
+            read -p " Your Google folder ID(default ${DF_DRIVE_FOLDER_ID}): " DRIVE_FOLDER_ID
         fi
-        read -p " Your Google folder ID(default ${DF_DRIVE_FOLDER_ID}): " DRIVE_FOLDER_ID
     fi
     if [ "${SYNC_FILE}" == "y" ]
     then
@@ -336,11 +387,14 @@ create_config(){
     else
         TAR_BEFORE_UPLOAD=${DF_TAR_BEFORE_UPLOAD}
     fi
-    write_config "${ACCT_DIR}/$1.conf" BACKUP_DIR        "${DF_BACKUP_DIR}"        "${BACKUP_DIR}"
-    write_config "${ACCT_DIR}/$1.conf" DAY_REMOVE        "${DF_DAY_REMOVE}"        "${DAY_REMOVE}"
-    write_config "${ACCT_DIR}/$1.conf" DRIVE_FOLDER_ID   "${DF_DRIVE_FOLDER_ID}"   "${DRIVE_FOLDER_ID}"
-    write_config "${ACCT_DIR}/$1.conf" SYNC_FILE         "${DF_SYNC_FILE}"         "${SYNC_FILE}"
-    write_config "${ACCT_DIR}/$1.conf" TAR_BEFORE_UPLOAD "${DF_TAR_BEFORE_UPLOAD}" "${TAR_BEFORE_UPLOAD}"
+    write_config "${ACCT_DIR}/${CLOUD_TYPE}.conf" BACKUP_DIR        "${DF_BACKUP_DIR}"        "${BACKUP_DIR}"
+    write_config "${ACCT_DIR}/${CLOUD_TYPE}.conf" DAY_REMOVE        "${DF_DAY_REMOVE}"        "${DAY_REMOVE}"
+    write_config "${ACCT_DIR}/${CLOUD_TYPE}.conf" SYNC_FILE         "${DF_SYNC_FILE}"         "${SYNC_FILE}"
+    write_config "${ACCT_DIR}/${CLOUD_TYPE}.conf" TAR_BEFORE_UPLOAD "${DF_TAR_BEFORE_UPLOAD}" "${TAR_BEFORE_UPLOAD}"
+    if [ "${CLOUD_TYPE}" == "drive" ]
+    then
+        write_config "${ACCT_DIR}/${CLOUD_TYPE}.conf" DRIVE_FOLDER_ID   "${DF_DRIVE_FOLDER_ID}"   "${DRIVE_FOLDER_ID}"
+    fi
     if [ $? -ne 0 ]
     then
         show_write_log "`change_color red [ERROR]` Can not write config to file ${BUTDR_CONF}. Please check permission of this file. Exit"
@@ -351,22 +405,25 @@ create_config(){
             show_write_log "`change_color yellow [WARNING]` Directory ${BACKUP_DIR} does not exist! Ensure you will be create it after."
             sleep 3
         fi
-        show_write_log "Setup config file for account $1 successful"
+        show_write_log "Setup config file for account ${CLOUD_TYPE} successful"
     fi
-    DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/$1.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
-    CHECK_RCLONE_ROOT_FOLDER_ID=`cat ${RCLONE_CONF} | grep -c "^root_folder_id = "`
-    if [ "${DRIVE_FOLDER_ID}" == "None" ]
+    if [ "${CLOUD_TYPE}" == "drive" ]
     then
-        if [ ${CHECK_RCLONE_ROOT_FOLDER_ID} -ne 0 ]
+        DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/${CLOUD_TYPE}.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
+        CHECK_RCLONE_ROOT_FOLDER_ID=`cat ${RCLONE_CONF} | grep -c "^root_folder_id = "`
+        if [ "${DRIVE_FOLDER_ID}" == "None" ]
         then
-            sed -i "/^root_folder_id =/d" ${RCLONE_CONF}
-        fi
-    else
-        if [ ${CHECK_RCLONE_ROOT_FOLDER_ID} -eq 0 ]
-        then
-            sed -i "/^\[googledrive\]$/a root_folder_id = ${DRIVE_FOLDER_ID}" ${RCLONE_CONF}
+            if [ ${CHECK_RCLONE_ROOT_FOLDER_ID} -ne 0 ]
+            then
+                sed -i "/^root_folder_id =/d" ${RCLONE_CONF}
+            fi
         else
-            sed -i "s/^root_folder_id = .*/root_folder_id = ${DRIVE_FOLDER_ID}/" ${RCLONE_CONF}
+            if [ ${CHECK_RCLONE_ROOT_FOLDER_ID} -eq 0 ]
+            then
+                sed -i "/^\[drive\]$/a root_folder_id = ${DRIVE_FOLDER_ID}" ${RCLONE_CONF}
+            else
+                sed -i "s/^root_folder_id = .*/root_folder_id = ${DRIVE_FOLDER_ID}/" ${RCLONE_CONF}
+            fi
         fi
     fi
 }
@@ -426,15 +483,18 @@ setup_cron(){
 # Reset account
 account_reset(){
     rm -f ${RCLONE_CONF}
-    show_write_log "Creating googledrive account..."
-    setup_drive
+    choose_cloud
+    case ${CLOUD_TYPE} in
+        drive)   setup_drive ;;
+        dropbox) setup_dropbox ;;
+    esac
 }
 
 # Config backup file for single account
 config_backup_single(){
     echo ""
     show_write_log "Setting up backup config file..."
-    create_config googledrive
+    create_config
 }
 
 # Show global config
@@ -448,7 +508,8 @@ show_global_config(){
 
 # Show backup config
 show_backup_config(){
-    CURRENT_ACCOUNT=`ls -1 ${ACCT_DIR} | grep ".conf$" | head -1 | sed 's/.conf//'`
+    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
+    CURRENT_ACCOUNT=${CLOUD_TYPE}
     BACKUP_DIR=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^BACKUP_DIR=" | cut -d"=" -f2`
     DAY_REMOVE=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^DAY_REMOVE=" | cut -d"=" -f2`
     BACKUP_DIR=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^BACKUP_DIR=" | cut -d"=" -f2`
@@ -459,7 +520,10 @@ show_backup_config(){
     show_write_log "| Account            : ${CURRENT_ACCOUNT}"
     show_write_log "| Backup dir         : ${BACKUP_DIR}"
     show_write_log "| Keep backup        : ${DAY_REMOVE} days"
-    show_write_log "| Google folder ID   : ${DRIVE_FOLDER_ID}"
+    if [ "${CLOUD_TYPE}" == "drive" ]
+    then
+        show_write_log "| Google folder ID   : ${DRIVE_FOLDER_ID}"
+    fi
     show_write_log "| Sync file          : ${SYNC_FILE}"
     show_write_log "| Tar before upload  : ${TAR_BEFORE_UPLOAD}"
 }
@@ -519,7 +583,7 @@ _help(){
     echo "    global        config global file"
     echo "    show          show all configs"
     echo "  --update        update butdr.bash & cron_backup.bash to latest version"
-    echo "  --uninstall     remove all butdr scripts and ${HOME}/.config directory"
+    echo "  --uninstall     remove all butdr scripts and ${HOME}.config directory"
 }
 
 # Setup or reset all scripts & config file
@@ -531,8 +595,12 @@ _setup(){
     check_network
     download_file
     download_rclone
-    setup_drive
-    create_config googledrive
+    choose_cloud
+    case ${CLOUD_TYPE} in
+        drive)   setup_drive ;;
+        dropbox) setup_dropbox ;;
+    esac
+    create_config
     config_global
     setup_cron
     show_info
@@ -605,7 +673,7 @@ _uninstall(){
         rm -rf ${CONF_DIR}
         if [ $? -eq 0 ]
         then
-            echo "`date '+[ %d/%m/%Y %H:%M:%S ]'` Remove directory ${CONF_DIR} successful"
+            echo "`date '+[ %d/%m/%Y %H:%M:%S ]' `Remove directory ${CONF_DIR} successful"
         else
             show_write_log "[ERROR] Can not remove directory ${CONF_DIR}. Please check permission of this directory"
         fi

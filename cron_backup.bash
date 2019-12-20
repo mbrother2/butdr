@@ -139,7 +139,10 @@ get_config_backup(){
     then
         check_config $1 BACKUP_DIR ${DF_BACKUP_DIR}
         check_config $1 DAY_REMOVE ${DF_DAY_REMOVE}
-        check_config $1 DRIVE_FOLDER_ID  ${DF_DRIVE_FOLDER_ID}
+        if [ "${CLOUD_TYPE}" == "drive" ]
+        then
+            check_config $1 DRIVE_FOLDER_ID  ${DF_DRIVE_FOLDER_ID}
+        fi
         check_config $1 SYNC_FILE  ${DF_SYNC_FILE}
         check_config $1 TAR_BEFORE_UPLOAD ${DF_TAR_BEFORE_UPLOAD}
     else
@@ -147,8 +150,11 @@ get_config_backup(){
         check_config $1 BACKUP_DIR ${DF_BACKUP_DIR} ${BACKUP_DIR}         
         DAY_REMOVE=`cat $1 | grep "^DAY_REMOVE" | cut -d"=" -f2 | sed 's/"//g' | sed "s/'//g"`
         check_config $1 DAY_REMOVE ${DF_DAY_REMOVE} ${DAY_REMOVE}
-        DRIVE_FOLDER_ID=`cat $1 | grep "^DRIVE_FOLDER_ID"  | cut -d"=" -f2 | sed 's/"//g' | sed "s/'//g"`
-        check_config $1 DRIVE_FOLDER_ID ${DF_DRIVE_FOLDER_ID} ${DRIVE_FOLDER_ID}
+        if [ "${CLOUD_TYPE}" == "drive" ]
+        then
+            DRIVE_FOLDER_ID=`cat $1 | grep "^DRIVE_FOLDER_ID"  | cut -d"=" -f2 | sed 's/"//g' | sed "s/'//g"`
+            check_config $1 DRIVE_FOLDER_ID ${DF_DRIVE_FOLDER_ID} ${DRIVE_FOLDER_ID}
+        fi
         SYNC_FILE=`cat $1 | grep "^SYNC_FILE"  | cut -d"=" -f2 | sed 's/"//g' | sed "s/'//g"`
         check_config $1 SYNC_FILE ${DF_SYNC_FILE} ${SYNC_FILE}
         TAR_BEFORE_UPLOAD=`cat $1 | grep "^TAR_BEFORE_UPLOAD" | cut -d"=" -f2 | sed 's/"//g' | sed "s/'//g"`
@@ -191,17 +197,24 @@ send_error_email(){
 # Check Google folder ID
 check_drive_id(){
     show_write_log "[${CURRENT_ACCOUNT}] Checking Google folder ID..."
-    ${RCLONE_BIN} lsd googledrive: &>/dev/null
+    ${RCLONE_BIN} lsd ${CURRENT_ACCOUNT}: &>/dev/null
     detect_error "[INFO]" "Check Google folder ID successful" "[CHECK][FAIL]" "Can not find Google folder ID"
-    CHECK_BACKUP_DIR=`${RCLONE_BIN} lsd googledrive: | awk '{print $5}' | grep -c "${TODAY}"`  
+    CHECK_BACKUP_DIR=`${RCLONE_BIN} lsd ${CURRENT_ACCOUNT}: | awk '{print $5}' | grep -c "${TODAY}"`  
     if [ ${CHECK_BACKUP_DIR} -eq 0 ]
     then
         show_write_log "[${CURRENT_ACCOUNT}] Directory ${TODAY} does not exist. Creating..."
-        ${RCLONE_BIN} mkdir googledrive:${TODAY}
+        ${RCLONE_BIN} mkdir ${CURRENT_ACCOUNT}:${TODAY}
         detect_error "[CREATE]" "Created directory ${TODAY} successful" "[CREATE][FAIL]" "Can not create directory ${TODAY}"
     else
         show_write_log "[${CURRENT_ACCOUNT}] Directory ${TODAY} existed. Skipping..."
     fi
+}
+
+# Check Dropbox connect
+check_connect_dropbox(){
+    show_write_log "[${CURRENT_ACCOUNT}] Checking connect to dropbox..."
+    ${RCLONE_BIN} about dropbox: &>/dev/null
+    detect_error "[INFO]" "Connect Dropbox successful" "[CONNECT][FAIL]" "Can not connect Dropbox with your credential, please check again"
 }
 
 # Run upload to Cloud
@@ -214,7 +227,7 @@ run_upload(){
         tar -zcf ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz *
         detect_error "[COMPRESS]" "Compress ${BACKUP_DIR} successful" "[COMPRESS][FAIL]" "Can not compress ${BACKUP_DIR}"
         show_write_log "[${CURRENT_ACCOUNT}] Uploading ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz to directory ${TODAY}..."
-        ${RCLONE_BIN} copy ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz googledrive:${TODAY}
+        ${RCLONE_BIN} copy ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz ${CURRENT_ACCOUNT}:${TODAY}
         detect_error "[UPLOAD]" "Uploaded ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz to directory ${TODAY}" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         show_write_log "[${CURRENT_ACCOUNT}] Removing ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz after upload..."
         rm -f ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz
@@ -231,16 +244,16 @@ run_upload(){
         if [ -f "${ACCT_DIR}/${CURRENT_ACCOUNT}.include" ]
         then
             show_write_log "[${CURRENT_ACCOUNT}] `change_color green [INFO]` File ${CURRENT_ACCOUNT}.include exists, only upload file & directories inside it"
-            ${RCLONE_BIN} copy ${BACKUP_DIR} googledrive:${TODAY} --create-empty-src-dirs --include-from ${ACCT_DIR}/googledrive.include
+            ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${TODAY} --create-empty-src-dirs --include-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.include
             detect_error "[UPLOAD]" "Finish! All files and directories in ${ACCT_DIR}/${CURRENT_ACCOUNT}.list are uploaded to Cloud" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         else
             show_write_log "[${CURRENT_ACCOUNT}] `change_color green [INFO]` You do not compress directory before upload"
             show_write_log "[${CURRENT_ACCOUNT}] Uploading from ${BACKUP_DIR} to ${TODAY} on Cloud"
             if [ -f "${ACCT_DIR}/${CURRENT_ACCOUNT}.exclude" ]
             then
-                ${RCLONE_BIN} copy ${BACKUP_DIR} googledrive:${TODAY} --create-empty-src-dirs --exclude-from ${ACCT_DIR}/googledrive.exclude
+                ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${TODAY} --create-empty-src-dirs --exclude-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.exclude
             else
-                ${RCLONE_BIN} copy ${BACKUP_DIR} googledrive:${TODAY} --create-empty-src-dirs
+                ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${TODAY} --create-empty-src-dirs
             fi
             detect_error "[UPLOAD]" "Finish! All files and directories in ${BACKUP_DIR} are uploaded to Cloud" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         fi
@@ -254,12 +267,12 @@ run_upload(){
 # Remove old directory on Google Drive
 remove_old_dir(){
     OLD_BACKUP_DAY=`date +%d_%m_%Y -d "-${DAY_REMOVE} day"`
-    CHECK_OLD_BACKUP_DIR=`${RCLONE_BIN} lsd googledrive: | awk '{print $5}' | grep -c "${OLD_BACKUP_DAY}"`  
+    CHECK_OLD_BACKUP_DIR=`${RCLONE_BIN} lsd ${CURRENT_ACCOUNT}: | awk '{print $5}' | grep -c "${OLD_BACKUP_DAY}"`  
     if [ ${CHECK_OLD_BACKUP_DIR} -eq 0 ]
     then
         show_write_log "[${CURRENT_ACCOUNT}] Directory ${OLD_BACKUP_DAY} does not exist. Nothing need remove!"
     else
-        ${RCLONE_BIN} purge googledrive:${OLD_BACKUP_DAY} --drive-use-trash=false
+        ${RCLONE_BIN} purge ${CURRENT_ACCOUNT}:${OLD_BACKUP_DAY} --drive-use-trash=false
         detect_error "[REMOVE]" "Removed directory ${OLD_BACKUP_DAY} successful" "[REMOVE][FAIL]" "Directory ${OLD_BACKUP_DAY} exists but can not remove!"
     fi
 }
@@ -267,7 +280,7 @@ remove_old_dir(){
 # Sync data from local to Google Drive
 run_sync(){
     show_write_log "[${CURRENT_ACCOUNT}] Syncing ${BACKUP_DIR} to Cloud..."
-    ${RCLONE_BIN} sync ${BACKUP_DIR} googledrive: --create-empty-src-dirs
+    ${RCLONE_BIN} sync ${BACKUP_DIR} ${CURRENT_ACCOUNT}: --create-empty-src-dirs
     detect_error "[SYNC]" "Finish! All files and directories in ${BACKUP_DIR} are synced to Cloud" "[SYNC][FAIL]" "Can not Sync with Cloud"
 }
 
@@ -275,12 +288,16 @@ run_sync(){
 get_config_global
 detect_os
 show_write_log "Start upload to Cloud..."
-CURRENT_ACCOUNT=`ls -1 ${ACCT_DIR} | grep ".conf$" | head -1 | sed 's/.conf//'`
+CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
+CURRENT_ACCOUNT=${CLOUD_TYPE}
 get_config_backup ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf
 check_info
 if [ "${SYNC_FILE}" == "No" ]
 then
-    check_drive_id
+    case ${CLOUD_TYPE} in
+        drive)   check_drive_id ;;
+        dropbox) check_connect_dropbox ;;
+    esac
     run_upload
     remove_old_dir
 elif [ "${SYNC_FILE}" == "Yes" ]
