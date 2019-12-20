@@ -1,2 +1,5 @@
+#### butdr 1.1.0 (20/12/2019) Add cloud
+- [Add cloud] Add support Dropbox
+
 #### butdr 1.0.0 (19/12/2019) First Release
 - [Release] Release butgg 1.0.0 stable
