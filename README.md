@@ -2,9 +2,6 @@
 Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
-# Plan
-- Add support Dropbox
-
 # What can this script do?
 - Download & config rclone with your Google credential
 - Create cron auto backup
@@ -42,6 +39,7 @@ $HOME (/root or /home/$USER)
 
 # Cloud support:
 - Google Drive
+- Dropbox
 
 # How to use
 **On Linux system:**
