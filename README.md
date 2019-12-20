@@ -51,10 +51,16 @@ bash butdr.bash --setup
 ```
 
 # Wiki
+### Common
+##### [What is the option SYNC_FILE?](https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F)
+
+### Google Drive( drive)
 ##### [Create own Google credential step by step](https://github.com/mbrother2/backuptogoogle/wiki/Create-own-Google-credential-step-by-step)
 ##### [Get Google folder ID](https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID)
 ##### [Turn on 2 Step Verification & create app's password for Google email](https://github.com/mbrother2/backuptogoogle/wiki/Turn-on-2-Step-Verification-&-create-app's-password-for-Google-email)
-##### [What is the option SYNC_FILE?](https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F)
+
+### Dropbox( dropbox)
+##### [Create own Dropbox credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step)
 
 # Change log
 https://github.com/mbrother2/butdr/blob/master/CHANGLOG.md
