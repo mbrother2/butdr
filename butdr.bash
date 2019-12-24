@@ -365,7 +365,7 @@ EOF
 setup_yandex(){
     show_write_log "Creating Yandex account..."
     echo ""
-    echo "Read more: "
+    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-Yandex-credential-step-by-step"
     read -p " Your Yandex ID: " YANDEX_ID
     read -p " Your Yandex Password: " YANDEX_PASSWORD
     if [[ -z ${YANDEX_ID} ]] || [[ -z ${YANDEX_PASSWORD} ]]
@@ -401,7 +401,7 @@ EOF
 setup_onedrive(){
     show_write_log "Creating One Drive account..."
     echo ""
-    echo "Read more: "
+    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-One-Drive-credential-step-by-step"
     read -p " Your One Drive client ID: " ONEDRIVE_CLIENT_ID
     read -p " Your One Drive client secret: " ONEDRIVE_CLIENT_SECRET
     if [[ -z ${ONEDRIVE_CLIENT_ID} ]] || [[ -z ${ONEDRIVE_CLIENT_SECRET} ]]
