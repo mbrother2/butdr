@@ -2,9 +2,6 @@
 Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
-# Plan
-- Support Yandex
-
 # What can this script do?
 - Download & config rclone with your [Cloud](https://github.com/mbrother2/butdr/blob/master/README.md#cloud-support) credential
 - Create cron auto backup
@@ -43,6 +40,8 @@ $HOME (/root or /home/$USER)
 # Cloud support:
 - Google Drive
 - Dropbox
+- Yandex
+- One Drive
 
 # How to use
 **On Linux system:**
