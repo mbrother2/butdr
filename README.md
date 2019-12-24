@@ -2,15 +2,18 @@
 Backup to Cloud solution use [rclone](https://github.com/rclone/rclone)
 ---
 
+# Plan
+- Support Yandex
+
 # What can this script do?
-- Download & config rclone with your Google credential
+- Download & config rclone with your [Cloud](https://github.com/mbrother2/butdr/blob/master/README.md#cloud-support) credential
 - Create cron auto backup
 - Exclude/include file/directory when run cron backup
-- Sync backup directory from local to Google Drive
+- Sync backup directory from local to Cloud
 - Compress backup directory before upload
-- Send error email if upload to Google Drive fail
-- Auto remove old backup on Google Drive
-- Run upload from your backup directory to Google Drive whenever you want
+- Send error email if upload to Cloud fail
+- Auto remove old backup on Cloud
+- Run upload from your backup directory to Cloud whenever you want
 - Detail log
 
 # Structure
@@ -23,9 +26,9 @@ $HOME (/root or /home/$USER)
    │
    └── .config
         ├── accounts
-        │   ├── googledrive.conf
-        │   ├── googledrive.exclude
-        │   └── googledrive.include
+        │   ├── <cloud>.conf
+        │   ├── <cloud>.exclude
+        │   └── <cloud>.include
         ├── butdr.conf
         ├── butdr.log
         ├── detail.log
