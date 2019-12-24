@@ -62,6 +62,12 @@ bash butdr.bash --setup
 ### Dropbox( dropbox)
 ##### [Create own Dropbox credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step)
 
+### Yandex( yandex)
+##### [Create own Yandex credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Yandex-credential-step-by-step)
+
+### One Drive( onedrive)
+##### [Create own One Drive credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-One-Drive-credential-step-by-step)
+
 # Change log
 https://github.com/mbrother2/butdr/blob/master/CHANGLOG.md
 
