@@ -13,6 +13,7 @@ DF_SYNC_FILE="No"
 DF_LOG_FILE="${CONF_DIR}/butdr.log"
 DF_DAY_REMOVE="7"
 DF_DRIVE_FOLDER_ID="None"
+DF_FOLDER_NAME="None"
 DF_EMAIL_USER="None"
 DF_EMAIL_PASS="None"
 DF_EMAIL_TO="None"
@@ -145,7 +146,7 @@ create_dir(){
             echo "Can not create directory ${HOME}/$1. Exit"
             exit 1
         else
-            if [ "$1" == ".config" ]
+            if [ "$1" == ".config/rclone" ]
             then
                 show_write_log "---"
                 show_write_log "Creating necessary directory..."
@@ -153,7 +154,7 @@ create_dir(){
             show_write_log "Create directory ${HOME}/$1 successful"
         fi
     else
-        if [ "$1" == ".config" ]
+        if [ "$1" == ".config/rclone" ]
         then
             show_write_log "---"
             show_write_log "Creating necessary directory..."
@@ -277,16 +278,20 @@ choose_cloud(){
     echo "Which cloud you will use?"
     echo "1. Google Drive"
     echo "2. Dropbox"
+    echo "3. Yandex"
+    echo "4. One Drive"
     read -p " Your choice: " CHOOSE_CLOUD
-    check_option number "${CHOOSE_CLOUD}" 2
+    check_option number "${CHOOSE_CLOUD}" 4
     while [ $? -ne 0 ]
     do
         read -p " Your choice: " CHOOSE_CLOUD
-        check_option number "${CHOOSE_CLOUD}" 2
+        check_option number "${CHOOSE_CLOUD}" 4
     done
     case ${CHOOSE_CLOUD} in
-        1) CLOUD_TYPE="drive" ;;
-        2) CLOUD_TYPE="dropbox" ;;
+        1) CLOUD_TYPE="drive";    setup_drive ;;
+        2) CLOUD_TYPE="dropbox";  setup_dropbox ;;
+        3) CLOUD_TYPE="yandex";   setup_yandex ;;
+        4) CLOUD_TYPE="onedrive"; setup_onedrive ;;
     esac
 }
 
@@ -300,8 +305,10 @@ setup_drive(){
     echo ""
     echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID"
     read -p " Your Google folder ID: " DRIVE_FOLDER_ID
+    rm -f ${RCLONE_CONF}
     if [[ -z ${DRIVE_CLIENT_ID} ]] || [[ -z ${DRIVE_CLIENT_SECRET} ]]
     then
+        show_write_log "`change_color yellow [WARNING]` You're using rclone Google credential, it may be low performance"
         if [ -z ${DRIVE_FOLDER_ID} ]
         then
             ${RCLONE_BIN} config create drive drive config_is_local false scope drive
@@ -317,7 +324,7 @@ setup_drive(){
         fi
     fi
     show_write_log "Checking connect to Google Drive..."
-    ${RCLONE_BIN} about drive: &>/dev/null
+    ${RCLONE_BIN} about drive:
     detect_error "Connect Google Drive successful" "[CONNECT][FAIL]" "Can not connect Google Drive with your credential, please check again"
     write_config "${ACCT_DIR}/drive.conf" DRIVE_FOLDER_ID "${DF_DRIVE_FOLDER_ID}" "${DRIVE_FOLDER_ID}"
     write_config "${ACCT_DIR}/drive.conf" CLOUD_TYPE "${CLOUD_TYPE}"
@@ -329,9 +336,16 @@ setup_dropbox(){
     show_write_log "Creating Dropbox account..."
     echo ""
     echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step"
-    read -p "Your Dropbox App key: " DROPBOX_APP_KEY
-    read -p "Your Dropbox App secret: " DROPBOX_APP_SECRET
-    read -p "Your Dropbox access token: " DROPBOX_ACCESS_TOKEN
+    read -p " Your Dropbox App key: " DROPBOX_APP_KEY
+    read -p " Your Dropbox App secret: " DROPBOX_APP_SECRET
+    read -p " Your Dropbox access token: " DROPBOX_ACCESS_TOKEN
+    if [[ -z ${DROPBOX_APP_KEY} ]] || [[ -z ${DROPBOX_APP_SECRET} ]] || [[ -z ${DROPBOX_ACCESS_TOKEN} ]]
+    then
+        show_write_log "`change_color red [FAIL]` butdr only support rclone with your own Dropbox credential. Exit"
+        exit 1
+    fi
+    read -p " Your Dropbox folder name: " DROPBOX_FOLDER_NAME
+    rm -f ${RCLONE_CONF}
     cat >> "${RCLONE_CONF}" <<EOF
 [dropbox]
 type = dropbox
@@ -340,9 +354,87 @@ app_secret = ${DROPBOX_APP_SECRET}
 token = ${DROPBOX_ACCESS_TOKEN}
 EOF
     show_write_log "Checking connect to Dropbox..."
-    ${RCLONE_BIN} about dropbox: &>/dev/null
+    ${RCLONE_BIN} about dropbox:
     detect_error "Connect Dropbox successful" "[CONNECT][FAIL]" "Can not connect Dropbox with your credential, please check again"
     write_config "${ACCT_DIR}/dropbox.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config "${ACCT_DIR}/dropbox.conf" FOLDER_NAME "${DF_FOLDER_NAME}" "${DROPBOX_FOLDER_NAME}"
+    write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
+}
+
+# Setup Yandex account
+setup_yandex(){
+    show_write_log "Creating Yandex account..."
+    echo ""
+    echo "Read more: "
+    read -p " Your Yandex ID: " YANDEX_ID
+    read -p " Your Yandex Password: " YANDEX_PASSWORD
+    if [[ -z ${YANDEX_ID} ]] || [[ -z ${YANDEX_PASSWORD} ]]
+    then
+        show_write_log "`change_color red [FAIL]` butdr only support rclone with your own Yandex credential. Exit"
+        exit 1
+    fi
+    read -p " Your Yandex folder name: " YANDEX_FOLDER_NAME
+    echo ""
+    echo "Authentication needed"
+    echo "Go to the following url in your browser:"
+    echo "https://oauth.yandex.com/authorize?response_type=code&client_id=${YANDEX_ID}"
+    echo ""
+    read -p " Enter verification code: " YANDEX_VERIFY_CODE
+    YANDEX_TOKEN=`curl -s -X POST https://oauth.yandex.com/token -F grant_type=authorization_code -F code=${YANDEX_VERIFY_CODE} -F client_id=${YANDEX_ID} -F client_secret=${YANDEX_PASSWORD} | sed "s/ //g"`
+    rm -f ${RCLONE_CONF}
+    cat >> "${RCLONE_CONF}" <<EOF
+[yandex]
+type = yandex
+client_id = ${YANDEX_ID}
+client_secret = ${YANDEX_PASSWORD}
+token = ${YANDEX_TOKEN}
+EOF
+    show_write_log "Checking connect to Yandex..."
+    ${RCLONE_BIN} about yandex:
+    detect_error "Connect Yandex successful" "[CONNECT][FAIL]" "Can not connect Yandex with your credential, please check again"
+    write_config "${ACCT_DIR}/yandex.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config "${ACCT_DIR}/yandex.conf" FOLDER_NAME "${DF_FOLDER_NAME}" "${YANDEX_FOLDER_NAME}"
+    write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
+}
+
+# Setup One Drive account
+setup_onedrive(){
+    show_write_log "Creating One Drive account..."
+    echo ""
+    echo "Read more: "
+    read -p " Your One Drive client ID: " ONEDRIVE_CLIENT_ID
+    read -p " Your One Drive client secret: " ONEDRIVE_CLIENT_SECRET
+    if [[ -z ${ONEDRIVE_CLIENT_ID} ]] || [[ -z ${ONEDRIVE_CLIENT_SECRET} ]]
+    then
+        show_write_log "`change_color red [FAIL]` butdr only support rclone with your own One Drive credential. Exit"
+        exit 1
+    fi
+    read -p " Your One Drive folder name: " ONEDRIVE_FOLDER_NAME
+    echo ""
+    echo "Authentication needed"
+    echo "Go to the following url in your browser:"
+    echo "https://login.live.com/oauth20_authorize.srf?client_id=${ONEDRIVE_CLIENT_ID}&scope=Files.Read+Files.ReadWrite+Files.Read.All+Files.ReadWrite.All+offline_access&response_type=code&redirect_uri=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Foauth2%2Fnativeclient"
+    echo ""
+    read -p " Enter verification code: " ONEDRIVE_VERIFY_CODE
+    ONEDRIVE_TOKEN=`curl -s -X POST "https://login.live.com/oauth20_token.srf" --data-urlencode "redirect_uri=https://login.microsoftonline.com/common/oauth2/nativeclient" --data-urlencode "client_id=${ONEDRIVE_CLIENT_ID}" --data-urlencode "client_secret=${ONEDRIVE_CLIENT_SECRET}" --data-urlencode "code=${ONEDRIVE_VERIFY_CODE}" --data-urlencode "grant_type=authorization_code"`
+    ONEDRIVE_REAL_TOKEN=`echo "${ONEDRIVE_TOKEN}" | sed 's/,/\n/g' | grep '"access_token":' | cut -d'"' -f4`
+    ONEDRIVE_DRIVE_ID=`curl -s "https://graph.microsoft.com/v1.0/me/drive" --header "Authorization: Bearer ${ONEDRIVE_REAL_TOKEN}" | sed 's/,/\n/g' | grep '"id":' | head -1 | cut -d'"' -f4`
+    ONEDRIVE_DRIVE_TYPE=`curl -s "https://graph.microsoft.com/v1.0/me/drive" --header "Authorization: Bearer ${ONEDRIVE_REAL_TOKEN}" | sed 's/,/\n/g' | grep '"driveType":' | head -1 | cut -d'"' -f4`
+    rm -f ${RCLONE_CONF}
+    cat >> "${RCLONE_CONF}" <<EOF
+[onedrive]
+type = onedrive
+drive_type = ${ONEDRIVE_DRIVE_TYPE}
+drive_id = ${ONEDRIVE_DRIVE_ID}
+client_id = ${ONEDRIVE_CLIENT_ID}
+client_secret = ${ONEDRIVE_CLIENT_SECRET}
+token = ${ONEDRIVE_TOKEN}
+EOF
+    show_write_log "Checking connect to One Drive..."
+    ${RCLONE_BIN} about onedrive:
+    detect_error "Connect One Drive successful" "[CONNECT][FAIL]" "Can not connect One Drive with your credential, please check again"
+    write_config "${ACCT_DIR}/onedrive.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config "${ACCT_DIR}/onedrive.conf" FOLDER_NAME "${DF_FOLDER_NAME}" "${ONEDRIVE_FOLDER_NAME}"
     write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
 }
 
@@ -482,12 +574,8 @@ setup_cron(){
 
 # Reset account
 account_reset(){
-    rm -f ${RCLONE_CONF}
     choose_cloud
-    case ${CLOUD_TYPE} in
-        drive)   setup_drive ;;
-        dropbox) setup_dropbox ;;
-    esac
+    create_config
 }
 
 # Config backup file for single account
@@ -596,10 +684,6 @@ _setup(){
     download_file
     download_rclone
     choose_cloud
-    case ${CLOUD_TYPE} in
-        drive)   setup_drive ;;
-        dropbox) setup_dropbox ;;
-    esac
     create_config
     config_global
     setup_cron
