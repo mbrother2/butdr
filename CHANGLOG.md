@@ -1,3 +1,7 @@
+#### butdr 1.2.0 (24/12/2019) Add cloud
+- [Add cloud] Add support Yandex
+- [Add cloud] Add support One Drive
+
 #### butdr 1.1.0 (20/12/2019) Add cloud
 - [Add cloud] Add support Dropbox
 
