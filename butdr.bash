@@ -277,11 +277,11 @@ download_rclone(){
 choose_cloud(){
     echo ""
     echo "Which cloud you will use?"
-    echo "1. Google Drive"
-    echo "2. Dropbox"
-    echo "3. Yandex"
-    echo "4. One Drive"
-    echo "5. Backblaze"
+    echo "1. Google Drive (drive)"
+    echo "2. Dropbox (dropbox)"
+    echo "3. Yandex (yandex)"
+    echo "4. One Drive (onedrive)"
+    echo "5. Backblaze (b2)"
     read -p " Your choice: " CHOOSE_CLOUD
     check_option number "${CHOOSE_CLOUD}" 5
     while [ $? -ne 0 ]
@@ -630,7 +630,9 @@ config_backup_single(){
 
 # Show global config
 show_global_config(){
+    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
     show_write_log "|---"
+    show_write_log "| Account type       : ${CLOUD_TYPE}"
     show_write_log "| Your email         : ${EMAIL_USER}"
     show_write_log "| Email password     : ${EMAIL_PASS}"
     show_write_log "| Email notify       : ${EMAIL_TO}"
@@ -644,7 +646,12 @@ show_backup_config(){
     BACKUP_DIR=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^BACKUP_DIR=" | cut -d"=" -f2`
     DAY_REMOVE=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^DAY_REMOVE=" | cut -d"=" -f2`
     BACKUP_DIR=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^BACKUP_DIR=" | cut -d"=" -f2`
-    DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
+    if [ "${CLOUD_TYPE}" == "drive" ]
+    then
+        DRIVE_FOLDER_ID=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^DRIVE_FOLDER_ID=" | cut -d"=" -f2`
+    else
+        CLOUD_FOLDER_NAME=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^FOLDER_NAME=" | cut -d"=" -f2`
+    fi
     SYNC_FILE=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^SYNC_FILE="  | cut -d"=" -f2`
     TAR_BEFORE_UPLOAD=`cat ${ACCT_DIR}/${CURRENT_ACCOUNT}.conf | grep "^TAR_BEFORE_UPLOAD=" | cut -d"=" -f2`
     show_write_log "|---"
@@ -654,6 +661,8 @@ show_backup_config(){
     if [ "${CLOUD_TYPE}" == "drive" ]
     then
         show_write_log "| Google folder ID   : ${DRIVE_FOLDER_ID}"
+    else
+        show_write_log "| Cloud folder name  : ${CLOUD_FOLDER_NAME}"
     fi
     show_write_log "| Sync file          : ${SYNC_FILE}"
     show_write_log "| Tar before upload  : ${TAR_BEFORE_UPLOAD}"
