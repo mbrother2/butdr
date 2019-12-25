@@ -311,10 +311,22 @@ remove_old_dir(){
                 run_time
                 exit 1
             fi
+        elif [ "${CLOUD_TYPE}" == "backblaze" ]
+        then
+            ${RCLONE_BIN} purge ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${OLD_BACKUP_DAY}
+            detect_error "[REMOVE]" "Removed directory ${OLD_BACKUP_DAY} successful" "[REMOVE][FAIL]" "Directory ${OLD_BACKUP_DAY} on Cloud exists but can not remove!"
         else
             ${RCLONE_BIN} purge ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${OLD_BACKUP_DAY}
-            show_write_log "[${CURRENT_ACCOUNT}] `change_color yellow [WARNING]` Only remove ${OLD_BACKUP_DAY} on Cloud to trash, please manual delete it permanently"
-            send_error_email "butdr [WARNING] - [${CURRENT_ACCOUNT}]" "Only remove ${OLD_BACKUP_DAY} on Cloud to trash, please manual delete it permanently"
+            if [ $? -eq 0 ]
+            then
+                show_write_log "[${CURRENT_ACCOUNT}] `change_color yellow [WARNING]` Only remove ${OLD_BACKUP_DAY} on Cloud to trash, please manual delete it permanently"
+                send_error_email "butdr [WARNING] - [${CURRENT_ACCOUNT}]" "Only remove ${OLD_BACKUP_DAY} on Cloud to trash, please manual delete it permanently"
+            else
+                show_write_log "[${CURRENT_ACCOUNT}] `change_color red [REMOVE][FAIL]` Directory ${OLD_BACKUP_DAY} on Cloud exists but can not remove. Exit"
+                send_error_email "butdr [REMOVE][FAIL] - [${CURRENT_ACCOUNT}]" "Directory ${OLD_BACKUP_DAY} on Cloud exists but can not remove!"
+                run_time
+                exit 1
+            fi
         fi
     fi
 }

@@ -2,6 +2,7 @@
 
 # Setup variables
 GITHUB_LINK="https://raw.githubusercontent.com/rootorchild/butdr/master"
+BUTDR_WIKI="https://github.com/mbrother2/butdr/wiki"
 BIN_DIR="${HOME}/bin"
 CONF_DIR="${HOME}/.config"
 ACCT_DIR="${CONF_DIR}/accounts"
@@ -280,18 +281,20 @@ choose_cloud(){
     echo "2. Dropbox"
     echo "3. Yandex"
     echo "4. One Drive"
+    echo "5. Backblaze"
     read -p " Your choice: " CHOOSE_CLOUD
-    check_option number "${CHOOSE_CLOUD}" 4
+    check_option number "${CHOOSE_CLOUD}" 5
     while [ $? -ne 0 ]
     do
         read -p " Your choice: " CHOOSE_CLOUD
-        check_option number "${CHOOSE_CLOUD}" 4
+        check_option number "${CHOOSE_CLOUD}" 5
     done
     case ${CHOOSE_CLOUD} in
         1) CLOUD_TYPE="drive";    setup_drive ;;
         2) CLOUD_TYPE="dropbox";  setup_dropbox ;;
         3) CLOUD_TYPE="yandex";   setup_yandex ;;
         4) CLOUD_TYPE="onedrive"; setup_onedrive ;;
+        5) CLOUD_TYPE="b2";       setup_backblaze ;;
     esac
 }
 
@@ -299,11 +302,11 @@ choose_cloud(){
 setup_drive(){
     show_write_log "Creating Google drive account..."
     echo ""
-    echo "Read more: https://github.com/mbrother2/backuptogoogle/wiki/Create-own-Google-credential-step-by-step"
+    echo "Read more: ${BUTDR_WIKI}/Create-own-Google-credential-step-by-step"
     read -p " Your Google API client_id: " DRIVE_CLIENT_ID
     read -p " Your Google API client_secret: " DRIVE_CLIENT_SECRET
     echo ""
-    echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID"
+    echo "Read more ${BUTDR_WIKI}/Get-Google-folder-ID"
     read -p " Your Google folder ID: " DRIVE_FOLDER_ID
     rm -f ${RCLONE_CONF}
     if [[ -z ${DRIVE_CLIENT_ID} ]] || [[ -z ${DRIVE_CLIENT_SECRET} ]]
@@ -335,7 +338,7 @@ setup_drive(){
 setup_dropbox(){
     show_write_log "Creating Dropbox account..."
     echo ""
-    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step"
+    echo "Read more: ${BUTDR_WIKI}/Create-own-Dropbox-credential-step-by-step"
     read -p " Your Dropbox App key: " DROPBOX_APP_KEY
     read -p " Your Dropbox App secret: " DROPBOX_APP_SECRET
     read -p " Your Dropbox access token: " DROPBOX_ACCESS_TOKEN
@@ -365,7 +368,7 @@ EOF
 setup_yandex(){
     show_write_log "Creating Yandex account..."
     echo ""
-    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-Yandex-credential-step-by-step"
+    echo "Read more: ${BUTDR_WIKI}/Create-own-Yandex-credential-step-by-step"
     read -p " Your Yandex ID: " YANDEX_ID
     read -p " Your Yandex Password: " YANDEX_PASSWORD
     if [[ -z ${YANDEX_ID} ]] || [[ -z ${YANDEX_PASSWORD} ]]
@@ -401,7 +404,7 @@ EOF
 setup_onedrive(){
     show_write_log "Creating One Drive account..."
     echo ""
-    echo "Read more: https://github.com/mbrother2/butdr/wiki/Create-own-One-Drive-credential-step-by-step"
+    echo "Read more: ${BUTDR_WIKI}/Create-own-One-Drive-credential-step-by-step"
     read -p " Your One Drive client ID: " ONEDRIVE_CLIENT_ID
     read -p " Your One Drive client secret: " ONEDRIVE_CLIENT_SECRET
     if [[ -z ${ONEDRIVE_CLIENT_ID} ]] || [[ -z ${ONEDRIVE_CLIENT_SECRET} ]]
@@ -435,6 +438,39 @@ EOF
     detect_error "Connect One Drive successful" "[CONNECT][FAIL]" "Can not connect One Drive with your credential, please check again"
     write_config "${ACCT_DIR}/onedrive.conf" CLOUD_TYPE "${CLOUD_TYPE}"
     write_config "${ACCT_DIR}/onedrive.conf" FOLDER_NAME "${DF_FOLDER_NAME}" "${ONEDRIVE_FOLDER_NAME}"
+    write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
+}
+
+# Setup Backblaze account
+setup_backblaze(){
+    show_write_log "Creating Backblaze account..."
+    echo ""
+    echo "Read more: ${BUTDR_WIKI}/Create-own-Backblaze-credential-step-by-step"
+    read -p " Your Backblaze key ID: " BACKBLAZE_KEY_ID
+    read -p " Your Backblaze application key: " BACKBLAZE_APPLICATION_KEY
+    if [[ -z ${BACKBLAZE_KEY_ID} ]] || [[ -z ${BACKBLAZE_APPLICATION_KEY} ]]
+    then
+        show_write_log "`change_color red [FAIL]` butdr only support rclone with your own Backblaze credential. Exit"
+        exit 1
+    fi
+    echo ""
+    echo "`change_color red [IMPORTANT]` Backblaze limits 100 buckets, so you should create new bucket for backup!"
+    echo "Read more: ${BUTDR_WIKI}/Backblaze-Create-new-bucket"
+    read -p " Your Backblaze bucket name: " BACKBLAZE_BUCKET_NAME
+    rclone config create b2 b2 account ${BACKBLAZE_KEY_ID} key ${BACKBLAZE_APPLICATION_KEY} hard_delete true
+    rm -f ${RCLONE_CONF}
+    cat >> "${RCLONE_CONF}" <<EOF
+[b2]
+type = b2
+account = ${BACKBLAZE_KEY_ID}
+key = ${BACKBLAZE_APPLICATION_KEY}
+hard_delete = false
+EOF
+    show_write_log "Checking connect to Backblaze..."
+    ${RCLONE_BIN} lsd b2: | head -1
+    detect_error "Connect Backblaze successful" "[CONNECT][FAIL]" "Can not connect Backblaze with your credential, please check again"
+    write_config "${ACCT_DIR}/b2.conf" CLOUD_TYPE "${CLOUD_TYPE}"
+    write_config "${ACCT_DIR}/b2.conf" FOLDER_NAME "${DF_FOLDER_NAME}" "${BACKBLAZE_BUCKET_NAME}"
     write_config ${BUTDR_CONF} CLOUD_TYPE "${CLOUD_TYPE}"
 }
 
@@ -574,6 +610,13 @@ setup_cron(){
 
 # Reset account
 account_reset(){
+    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
+    if [ ! -z "${CLOUD_TYPE}" ]
+    then
+        echo ""
+        echo "Current account: ${CLOUD_TYPE}"
+        echo "---"
+    fi
     choose_cloud
     create_config
 }
