@@ -49,6 +49,10 @@ $HOME (/root or /home/$USER)
 curl -o butdr.bash https://raw.githubusercontent.com/mbrother2/butdr/master/butdr.bash
 bash butdr.bash --setup
 ```
+After install, run backup immediately to test:
+```
+cron_backup.bash -v
+```
 
 # Wiki
 ### Common
