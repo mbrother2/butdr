@@ -476,8 +476,6 @@ EOF
 
 # Create config for Cloud account
 create_config(){
-    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
-    echo ""
     read -p " Which directory on your server do you want to upload to account ${CLOUD_TYPE}?(default ${DF_BACKUP_DIR}): " BACKUP_DIR
     read -p " How many days do you want to keep backup on Cloud?(default ${DF_DAY_REMOVE}): " DAY_REMOVE
     echo ""
@@ -623,6 +621,10 @@ account_reset(){
 
 # Config backup file for single account
 config_backup_single(){
+    CLOUD_TYPE=`cat ${BUTDR_CONF} | grep "^CLOUD_TYPE=" | cut -d"=" -f2`
+    echo ""
+    echo "Current account: ${CLOUD_TYPE}"
+    echo "---"
     echo ""
     show_write_log "Setting up backup config file..."
     create_config
