@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Setup variables
-GITHUB_LINK="https://raw.githubusercontent.com/rootorchild/butdr/master"
+GITHUB_LINK="https://raw.githubusercontent.com/mbrother2/butdr/master"
 BUTDR_WIKI="https://github.com/mbrother2/butdr/wiki"
 BIN_DIR="${HOME}/bin"
 CONF_DIR="${HOME}/.config"
