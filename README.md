@@ -186,8 +186,8 @@ Read more https://github.com/mbrother2/backuptogoogle/wiki/Turn-on-2-Step-Verifi
 [ 19/12/2019 13:35:32 ] | Tar before upload  : No
 [ 19/12/2019 13:35:32 ] +-----
 
-IMPORTANT: Please run command to use butgg: source /home/butdr/.profile 
-If you get trouble when use butgg.bash please report here:
+IMPORTANT: Please run command to use butdr: source /home/butdr/.profile 
+If you get trouble when use butdr.bash please report here:
 https://github.com/mbrother2/butdr/issues
 ```
 
