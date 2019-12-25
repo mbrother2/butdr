@@ -42,6 +42,7 @@ $HOME (/root or /home/$USER)
 - Dropbox
 - Yandex
 - One Drive
+- Backblaze
 
 # How to use
 **On Linux system:**
@@ -71,6 +72,10 @@ cron_backup.bash -v
 
 ### One Drive( onedrive)
 ##### [Create own One Drive credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-One-Drive-credential-step-by-step)
+
+### Backblaze( b2)
+##### [Create own Backblaze credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Backblaze-credential-step-by-step)
+##### [Backblaze Create new bucket](https://github.com/mbrother2/butdr/wiki/Backblaze-Create-new-bucket)
 
 # Change log
 https://github.com/mbrother2/butdr/blob/master/CHANGLOG.md
