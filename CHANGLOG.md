@@ -1,3 +1,6 @@
+#### butdr 1.4.0 (31/12/2019) Add support
+- [Add support] Add support Oracle Linux
+
 #### butdr 1.3.0 (25/12/2019) Add cloud
 - [Add cloud] Add support Backblaze
 
