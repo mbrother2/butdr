@@ -218,7 +218,7 @@ detect_os(){
     if [ -f /etc/os-release ]
     then
         OS=`cat /etc/os-release | grep "^NAME=" | cut -d'"' -f2 | awk '{print $1}'`
-        if [[ "${OS}" == "CentOS" ]] || [[ "${OS}" == "CloudLinux" ]]
+        if [[ "${OS}" == "CentOS" ]] || [[ "${OS}" == "CloudLinux" ]] || [[ "${OS}" == "Oracle" ]]
         then
             INSTALL_CM="yum"
         elif [[ "${OS}" == "Ubuntu" ]] || [[ "${OS}" == "Debian" ]]
