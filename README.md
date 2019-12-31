@@ -35,7 +35,7 @@ $HOME (/root or /home/$USER)
 ```
 
 # OS support(x86_64):
-- **Linux:** CentOS, Debian, Ubuntu, openSUSE
+- **Linux:** CentOS, Debian, Ubuntu, openSUSE, Oracle Linux
 
 # Cloud support:
 - Google Drive
