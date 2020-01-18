@@ -3,6 +3,7 @@
 # Setup variables
 GITHUB_LINK="https://raw.githubusercontent.com/mbrother2/butdr/master"
 BUTDR_WIKI="https://github.com/mbrother2/butdr/wiki"
+BACKUPTOGOOGLE_WIKI="https://github.com/mbrother2/backuptogoogle/wiki"
 BIN_DIR="${HOME}/bin"
 CONF_DIR="${HOME}/.config"
 ACCT_DIR="${CONF_DIR}/accounts"
@@ -302,11 +303,11 @@ choose_cloud(){
 setup_drive(){
     show_write_log "Creating Google drive account..."
     echo ""
-    echo "Read more: ${BUTDR_WIKI}/Create-own-Google-credential-step-by-step"
+    echo "Read more: ${BACKUPTOGOOGLE_WIKI}/Create-own-Google-credential-step-by-step"
     read -p " Your Google API client_id: " DRIVE_CLIENT_ID
     read -p " Your Google API client_secret: " DRIVE_CLIENT_SECRET
     echo ""
-    echo "Read more ${BUTDR_WIKI}/Get-Google-folder-ID"
+    echo "Read more ${BACKUPTOGOOGLE_WIKI}/Get-Google-folder-ID"
     read -p " Your Google folder ID: " DRIVE_FOLDER_ID
     rm -f ${RCLONE_CONF}
     if [[ -z ${DRIVE_CLIENT_ID} ]] || [[ -z ${DRIVE_CLIENT_SECRET} ]]
@@ -479,7 +480,7 @@ create_config(){
     read -p " Which directory on your server do you want to upload to account ${CLOUD_TYPE}?(default ${DF_BACKUP_DIR}): " BACKUP_DIR
     read -p " How many days do you want to keep backup on Cloud?(default ${DF_DAY_REMOVE}): " DAY_REMOVE
     echo ""
-    echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F"
+    echo "Read more ${BACKUPTOGOOGLE_WIKI}/What-is-the-option-SYNC_FILE%3F"
     read -p " Do you want only sync file(default no)(y/n): " SYNC_FILE
     if [ "${CLOUD_TYPE}" == "drive" ]
     then
@@ -487,7 +488,7 @@ create_config(){
         if [[ -z ${DRIVE_FOLDER_ID} ]] || [[ "${FIRST_OPTION}" == "--config" ]]
         then
             echo ""
-            echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID"
+            echo "Read more ${BACKUPTOGOOGLE_WIKI}/Get-Google-folder-ID"
             if [ "${SYNC_FILE}" == "y" ]
             then
                 echo "Because you choose sync file method, so you must enter exactly Google folder ID here!"
@@ -558,7 +559,7 @@ create_config(){
 config_global(){
     show_write_log "Setting up global config file..."
     echo ""
-    echo "Read more https://github.com/mbrother2/backuptogoogle/wiki/Turn-on-2-Step-Verification-&-create-app's-password-for-Google-email"
+    echo "Read more ${BACKUPTOGOOGLE_WIKI}/Turn-on-2-Step-Verification-&-create-app's-password-for-Google-email"
     read -p " Do you want to send email if upload error(default no)(y/n): " SEND_EMAIL
     if [ "${SEND_EMAIL}" == "y" ]
     then
