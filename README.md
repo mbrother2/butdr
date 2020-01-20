@@ -57,7 +57,7 @@ cron_backup.bash -v
 
 # Wiki
 ### Common
-##### [What is the option SYNC_FILE?](https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F)
+##### [What is the option SYNC_FILE?](https://github.com/mbrother2/butdr/wiki/What-is-the-option-SYNC_FILE%3F)
 
 ### Google Drive( drive)
 ##### [Create own Google credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Google-credential-step-by-step)
