@@ -60,9 +60,9 @@ cron_backup.bash -v
 ##### [What is the option SYNC_FILE?](https://github.com/mbrother2/backuptogoogle/wiki/What-is-the-option-SYNC_FILE%3F)
 
 ### Google Drive( drive)
-##### [Create own Google credential step by step](https://github.com/mbrother2/backuptogoogle/wiki/Create-own-Google-credential-step-by-step)
-##### [Get Google folder ID](https://github.com/mbrother2/backuptogoogle/wiki/Get-Google-folder-ID)
-##### [Turn on 2 Step Verification & create app's password for Google email](https://github.com/mbrother2/backuptogoogle/wiki/Turn-on-2-Step-Verification-&-create-app's-password-for-Google-email)
+##### [Create own Google credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Google-credential-step-by-step)
+##### [Get Google folder ID](https://github.com/mbrother2/butdr/wiki/Get-Google-folder-ID)
+##### [Turn on 2 Step Verification & create app's password for Google email](https://github.com/mbrother2/butdr/wiki/Turn-on-2-Step-Verification-&-create-app's-password-for-Google-email)
 
 ### Dropbox( dropbox)
 ##### [Create own Dropbox credential step by step](https://github.com/mbrother2/butdr/wiki/Create-own-Dropbox-credential-step-by-step)
