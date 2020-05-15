@@ -334,7 +334,7 @@ remove_old_dir(){
 # Sync data from local to Google Drive
 run_sync(){
     show_write_log "[${CURRENT_ACCOUNT}] Syncing ${BACKUP_DIR} to Cloud..."
-    ${RCLONE_BIN} sync ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME} --create-empty-src-dirs
+    ${RCLONE_BIN} sync -P ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME} --create-empty-src-dirs
     detect_error "[SYNC]" "Finish! All files and directories in ${BACKUP_DIR} are synced to Cloud" "[SYNC][FAIL]" "Can not Sync with Cloud"
 }
 
