@@ -245,7 +245,7 @@ run_upload(){
         tar -zcf ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz *
         detect_error "[COMPRESS]" "Compress ${BACKUP_DIR} successful" "[COMPRESS][FAIL]" "Can not compress ${BACKUP_DIR}"
         show_write_log "[${CURRENT_ACCOUNT}] Uploading ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz to directory ${TODAY}..."
-        ${RCLONE_BIN} copy ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY}
+        ${RCLONE_BIN} copy -P ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY}
         detect_error "[UPLOAD]" "Uploaded ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz to directory ${TODAY}" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         show_write_log "[${CURRENT_ACCOUNT}] Removing ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz after upload..."
         rm -f ${BACKUP_DIR_NAME}_${RANDOM_STRING}.tar.gz
@@ -262,16 +262,16 @@ run_upload(){
         if [ -f "${ACCT_DIR}/${CURRENT_ACCOUNT}.include" ]
         then
             show_write_log "[${CURRENT_ACCOUNT}] `change_color green [INFO]` File ${CURRENT_ACCOUNT}.include exists, only upload file & directories inside it"
-            ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs --include-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.include
+            ${RCLONE_BIN} copy -P ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs --include-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.include
             detect_error "[UPLOAD]" "Finish! All files and directories in ${ACCT_DIR}/${CURRENT_ACCOUNT}.list are uploaded to Cloud" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         else
             show_write_log "[${CURRENT_ACCOUNT}] `change_color green [INFO]` You do not compress directory before upload"
             show_write_log "[${CURRENT_ACCOUNT}] Uploading from ${BACKUP_DIR} to ${TODAY} on Cloud"
             if [ -f "${ACCT_DIR}/${CURRENT_ACCOUNT}.exclude" ]
             then
-                ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs --exclude-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.exclude
+                ${RCLONE_BIN} copy -P ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs --exclude-from ${ACCT_DIR}/${CURRENT_ACCOUNT}.exclude
             else
-                ${RCLONE_BIN} copy ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs
+                ${RCLONE_BIN} copy -P ${BACKUP_DIR} ${CURRENT_ACCOUNT}:${FOLDER_NAME}/${TODAY} --create-empty-src-dirs
             fi
             detect_error "[UPLOAD]" "Finish! All files and directories in ${BACKUP_DIR} are uploaded to Cloud" "[UPLOAD][FAIL]" "Can not upload to Cloud"
         fi
