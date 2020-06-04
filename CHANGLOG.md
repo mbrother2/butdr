@@ -1,3 +1,6 @@
+#### butdr 1.4.1 (04/06/2020) Add support
+- [Add support] Add support Fedora
+
 #### butdr 1.4.0 (31/12/2019) Add support
 - [Add support] Add support Oracle Linux
 
