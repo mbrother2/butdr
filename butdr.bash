@@ -266,7 +266,7 @@ download_file(){
 download_rclone(){
     show_write_log "Downloading rclone from homepage..."
     cd $HOME/bin
-    curl -o rclone.zip https://downloads.rclone.org/rclone-current-linux-amd64.zip
+    curl -o rclone.zip https://downloads.rclone.org/v1.55.1/rclone-v1.55.1-linux-amd64.zip
     detect_error "Download rclone successful" "[DOWNLOAD][FAIL]" "Can not download rclone, please check your network. Exit"
     unzip -q rclone.zip -d rclone-butdr
     mv rclone-butdr/rclone-*-linux-amd64/rclone rclone
