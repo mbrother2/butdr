@@ -104,7 +104,7 @@ check_option(){
 # Check MD5 of downloaded file
 check_md5sum(){
     curl -s -o $2 ${GITHUB_LINK}/$1
-    ORIGIN_MD5=`curl -s ${GITHUB_LINK}/MD5SUM | grep $1 | awk '{print $1}'`
+    ORIGIN_MD5=`curl -s -H 'Cache-Control: no-cache' ${GITHUB_LINK}/MD5SUM | grep $1 | awk '{print $1}'`
     LOCAL_MD5=`md5sum $2 | awk '{print $1}'`
     if [ "${ORIGIN_MD5}" == "${LOCAL_MD5}" ]
     then
